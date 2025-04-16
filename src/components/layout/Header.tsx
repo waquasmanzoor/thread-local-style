@@ -1,11 +1,24 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Search, ShoppingBag, User, Menu, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ShoppingBag, User, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SearchDialog from "@/components/search/SearchDialog";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleUserClick = () => {
+    // Navigate to login if not logged in, or to account page if logged in
+    // For now, always navigate to login
+    navigate("/login");
+  };
+
+  const handleCartClick = () => {
+    // Navigate to cart page
+    navigate("/cart");
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-border">
@@ -31,18 +44,37 @@ const Header = () => {
         </div>
 
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="icon" className="hidden md:flex">
-            <Search className="h-5 w-5" />
-            <span className="sr-only">Search</span>
-          </Button>
-          <Button variant="ghost" size="icon" className="hidden md:flex">
+          <SearchDialog mobileView={false}>
+            <Button variant="ghost" size="icon" className="hidden md:flex">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-search h-5 w-5"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              <span className="sr-only">Search</span>
+            </Button>
+          </SearchDialog>
+          
+          <Button variant="ghost" size="icon" className="hidden md:flex" onClick={handleUserClick}>
             <User className="h-5 w-5" />
             <span className="sr-only">Account</span>
           </Button>
-          <Button variant="ghost" size="icon">
+          
+          <Button variant="ghost" size="icon" onClick={handleCartClick}>
             <ShoppingBag className="h-5 w-5" />
             <span className="sr-only">Cart</span>
           </Button>
+          
           <Button
             variant="ghost"
             size="icon"
@@ -88,11 +120,36 @@ const Header = () => {
               New Arrivals
             </Link>
             <div className="pt-2">
-              <Button variant="ghost" size="sm" className="w-full justify-start px-2">
-                <Search className="h-4 w-4 mr-2" />
-                Search
-              </Button>
-              <Button variant="ghost" size="sm" className="w-full justify-start px-2">
+              <SearchDialog mobileView={true}>
+                <Button variant="ghost" size="sm" className="w-full justify-start px-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-search h-4 w-4 mr-2"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                  </svg>
+                  Search
+                </Button>
+              </SearchDialog>
+              
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="w-full justify-start px-2"
+                onClick={() => {
+                  handleUserClick();
+                  setMobileMenuOpen(false);
+                }}
+              >
                 <User className="h-4 w-4 mr-2" />
                 Account
               </Button>
