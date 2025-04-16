@@ -12,6 +12,9 @@ import Signup from "./pages/Signup";
 import Cart from "./pages/Cart";
 import CategoryPage from "./pages/CategoryPage";
 
+// Import CSS files for styling
+import './App.css';
+
 const queryClient = new QueryClient();
 
 const App = () => (

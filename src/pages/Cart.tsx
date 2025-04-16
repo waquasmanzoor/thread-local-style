@@ -10,23 +10,23 @@ const Cart = () => {
 
   return (
     <Container>
-      <div className="container mx-auto px-4 py-8 md:py-12">
-        <h1 className="text-3xl font-bold mb-6">Your Cart</h1>
+      <div className="container mx-auto px-4 py-12 md:py-16">
+        <h1 className="text-4xl font-serif font-bold mb-6 text-gradient">Your Cart</h1>
         
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="bg-primary/10 p-6 rounded-full mb-6">
-              <ShoppingBag className="h-10 w-10 text-primary" />
+            <div className="bg-primary/10 p-8 rounded-full mb-8 animate-fade-in">
+              <ShoppingBag className="h-12 w-12 text-primary" />
             </div>
-            <h2 className="text-2xl font-semibold mb-3">Your cart is empty</h2>
-            <p className="text-muted-foreground mb-8 max-w-md">
+            <h2 className="text-2xl font-serif font-semibold mb-4">Your cart is empty</h2>
+            <p className="text-muted-foreground mb-10 max-w-md">
               Looks like you haven't added any items to your cart yet.
               Explore our catalog to find the perfect pieces to rent.
             </p>
-            <Button asChild size="lg">
+            <Button asChild size="lg" className="group">
               <Link to="/">
                 Continue Shopping
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
           </div>
