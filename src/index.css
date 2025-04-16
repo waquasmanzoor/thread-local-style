@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -46,30 +45,22 @@
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
-
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
     --primary: 210 40% 98%;
     --primary-foreground: 222 47% 11%;
-
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
-
     --accent: 217 33% 17%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217 33% 17%;
     --input: 217 33% 17%;
     --ring: 213 27% 84%;
@@ -89,27 +80,15 @@
   * {
     @apply border-border;
   }
-
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
   
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-serif;
+  body {
+    @apply bg-background text-foreground dark:bg-[#0F172A] dark:text-white;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent;
-  }
-  
-  .card-hover {
-    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
-  }
-  
-  .glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-md;
+    @apply bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent dark:from-white dark:to-gray-300;
   }
 }

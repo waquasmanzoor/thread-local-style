@@ -11,20 +11,18 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em rgba(100, 108, 255, 0.67));
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em rgba(97, 218, 251, 0.67));
 }
 
 @keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -34,30 +32,22 @@
 }
 
 .card {
-  padding: 2em;
-  transition: all 0.3s ease;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1 
+         dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700;
 }
 
 .read-the-docs {
-  color: #888;
+  @apply text-gray-500 dark:text-gray-400;
 }
 
 .hero-section {
-  background: linear-gradient(to right, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)), 
-              url('https://images.unsplash.com/photo-1445205170230-053b83016050?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
-  background-size: cover;
-  background-position: center;
+  @apply dark:bg-opacity-10 dark:bg-gray-900;
 }
 
 .section-heading {
-  @apply font-serif text-3xl md:text-4xl lg:text-5xl font-bold mb-6;
+  @apply dark:text-white;
 }
 
 .section-subheading {
-  @apply text-lg text-muted-foreground max-w-2xl mx-auto mb-12;
+  @apply dark:text-gray-300;
 }
