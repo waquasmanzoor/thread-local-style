@@ -72,6 +72,48 @@ export type Database = {
         }
         Relationships: []
       }
+      rentals: {
+        Row: {
+          color_id: string | null
+          created_at: string
+          id: string
+          product_id: string
+          rental_end_date: string | null
+          rental_period_id: string
+          rental_start_date: string | null
+          size_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color_id?: string | null
+          created_at?: string
+          id?: string
+          product_id: string
+          rental_end_date?: string | null
+          rental_period_id: string
+          rental_start_date?: string | null
+          size_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color_id?: string | null
+          created_at?: string
+          id?: string
+          product_id?: string
+          rental_end_date?: string | null
+          rental_period_id?: string
+          rental_start_date?: string | null
+          size_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

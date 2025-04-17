@@ -1,7 +1,7 @@
 
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { Heart, ShoppingBag, Truck, RotateCcw, Calendar, ArrowRight } from "lucide-react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { Heart, ShoppingBag, Truck, RotateCcw, Calendar, ArrowRight, CheckCircle } from "lucide-react";
 import Container from "@/components/layout/Container";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,10 +10,16 @@ import { getProductById } from "@/data/products";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/hooks/useAuth";
+import { AuthModal } from "@/components/auth/AuthModal";
+import { createRental } from "@/services/rentalService";
+import { toast } from "@/hooks/use-toast";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const product = getProductById(id || "");
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(
@@ -25,6 +31,8 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState<string | undefined>(
     product?.colors.find(color => color.available)?.id
   );
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isRenting, setIsRenting] = useState(false);
 
   if (!product) {
     return (
@@ -42,6 +50,44 @@ const ProductDetail = () => {
   const currentRentalPeriod = product.rentalPeriods.find(
     period => period.id === selectedPeriod
   );
+
+  const handleRentClick = async () => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+
+    if (!selectedSize) {
+      toast({
+        variant: "destructive",
+        title: "Size required",
+        description: "Please select a size before renting.",
+      });
+      return;
+    }
+
+    try {
+      setIsRenting(true);
+      const result = await createRental({
+        productId: product.id,
+        rentalPeriodId: selectedPeriod,
+        sizeId: selectedSize,
+        colorId: selectedColor
+      });
+
+      if (result.success) {
+        toast({
+          title: "Rental created successfully!",
+          description: `You've rented ${product.name} for ${currentRentalPeriod?.name}.`,
+        });
+        // Optionally navigate to a confirmation page or user rentals page
+      }
+    } catch (error) {
+      console.error("Failed to rent:", error);
+    } finally {
+      setIsRenting(false);
+    }
+  };
 
   return (
     <Container>
@@ -190,10 +236,26 @@ const ProductDetail = () => {
               </p>
             </div>
 
-            {/* Add to Bag Button */}
-            <Button className="w-full py-6" size="lg">
-              <ShoppingBag className="mr-2 h-5 w-5" /> Add to Bag
-            </Button>
+            {/* Rent Button */}
+            <div className="grid grid-cols-2 gap-4">
+              <Button 
+                className="w-full py-6" 
+                size="lg" 
+                variant="secondary"
+              >
+                <ShoppingBag className="mr-2 h-5 w-5" /> Add to Bag
+              </Button>
+              
+              <Button 
+                className="w-full py-6" 
+                size="lg"
+                onClick={handleRentClick}
+                disabled={isRenting}
+              >
+                <Calendar className="mr-2 h-5 w-5" /> 
+                {isRenting ? "Processing..." : "Rent Now"}
+              </Button>
+            </div>
             
             {/* Shipping & Returns */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
@@ -244,6 +306,12 @@ const ProductDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        open={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
     </Container>
   );
 };
