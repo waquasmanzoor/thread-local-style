@@ -1,12 +1,26 @@
 
-import Container from "@/components/layout/Container";
-import { ShoppingBag, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { ShoppingBag, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import Container from "@/components/layout/Container";
+import { AddressSelector } from "@/components/cart/AddressSelector";
+import { DeliveryAddress } from "@/services/addressService";
 
 const Cart = () => {
   // For now, we'll show an empty cart
   const isEmpty = true;
+  const [isAddressOpen, setIsAddressOpen] = useState(true);
+  const [selectedAddress, setSelectedAddress] = useState<DeliveryAddress | null>(null);
+
+  const handleAddressSelection = (address: DeliveryAddress) => {
+    setSelectedAddress(address);
+  };
 
   return (
     <Container>
@@ -31,9 +45,54 @@ const Cart = () => {
             </Button>
           </div>
         ) : (
-          <div>
-            {/* Cart items will go here when implemented */}
-            <p>Cart items will be displayed here</p>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              {/* Cart items will go here when implemented */}
+              <p>Cart items will be displayed here</p>
+            </div>
+            
+            <div className="lg:col-span-1">
+              <div className="bg-card rounded-lg shadow-sm border p-6 space-y-6">
+                <Collapsible open={isAddressOpen} onOpenChange={setIsAddressOpen}>
+                  <CollapsibleTrigger className="flex w-full items-center justify-between font-medium">
+                    Delivery Information
+                    {isAddressOpen ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-4">
+                    <AddressSelector onSelectAddress={handleAddressSelection} />
+                  </CollapsibleContent>
+                </Collapsible>
+                
+                <div className="pt-6 border-t">
+                  <div className="flex justify-between mb-2">
+                    <span>Subtotal</span>
+                    <span>$0.00</span>
+                  </div>
+                  <div className="flex justify-between mb-2 text-sm text-muted-foreground">
+                    <span>Shipping</span>
+                    <span>$0.00</span>
+                  </div>
+                  <div className="flex justify-between font-medium text-lg mt-4 pt-4 border-t">
+                    <span>Total</span>
+                    <span>$0.00</span>
+                  </div>
+                  
+                  <Button disabled={!selectedAddress} className="w-full mt-6">
+                    Proceed to Checkout
+                  </Button>
+                  
+                  {!selectedAddress && (
+                    <p className="text-xs text-center mt-2 text-muted-foreground">
+                      Please select a delivery address to continue
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

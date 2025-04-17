@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PlusCircle, Edit, Trash, AlertCircle, ArrowDownUp, Package2 } from "lucide-react";
@@ -112,13 +111,22 @@ const MerchantProducts = () => {
 
   const createMutation = useMutation({
     mutationFn: (values: FormValues) => createMerchantProduct({
-      ...values,
       merchant_id: merchant?.id || "",
+      name: values.name,
+      description: values.description,
+      price: values.price,
+      image_url: values.image_url,
+      category: values.category,
+      available_for_rent: true,
+      is_active: true
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['merchantProducts'] });
       setIsAddProductOpen(false);
-      form.reset();
+      toast({
+        title: "Success",
+        description: "Product created successfully",
+      });
     }
   });
 
