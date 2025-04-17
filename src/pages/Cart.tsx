@@ -84,11 +84,11 @@ const Cart = () => {
                     <span>$0.00</span>
                   </div>
                   
-                  <Button disabled={!selectedAddress} className="w-full mt-6">
+                  <Button disabled={!selectedAddressId} className="w-full mt-6">
                     Proceed to Checkout
                   </Button>
                   
-                  {!selectedAddress && (
+                  {!selectedAddressId && (
                     <p className="text-xs text-center mt-2 text-muted-foreground">
                       Please select a delivery address to continue
                     </p>
