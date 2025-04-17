@@ -54,3 +54,53 @@ export const getUserRentals = async () => {
     return { error };
   }
 };
+
+export const getMerchantRentals = async (merchantId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("rentals")
+      .select(`
+        *,
+        merchant_products:product_id (
+          id,
+          name,
+          price,
+          merchant_id
+        )
+      `)
+      .eq("merchant_products.merchant_id", merchantId)
+      .order("created_at", { ascending: false });
+      
+    if (error) throw error;
+    return { data };
+  } catch (error: any) {
+    console.error("Error fetching merchant rentals:", error);
+    return { error };
+  }
+};
+
+export const updateRentalStatus = async (rentalId: string, status: string) => {
+  try {
+    const { error } = await supabase
+      .from("rentals")
+      .update({ status })
+      .eq("id", rentalId);
+      
+    if (error) throw error;
+    
+    toast({
+      title: "Status updated",
+      description: `Order status has been updated to ${status}.`,
+    });
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error updating rental status:", error);
+    toast({
+      variant: "destructive",
+      title: "Update failed",
+      description: error.message,
+    });
+    return { success: false, error };
+  }
+};

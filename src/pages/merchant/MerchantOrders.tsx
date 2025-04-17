@@ -24,17 +24,47 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import MerchantLayout from "@/components/merchant/MerchantLayout";
 import { 
-  getMerchantProfile, 
-  getMerchantRentals,
-  MerchantRental
+  getMerchantProfile
 } from "@/services/merchantService";
+import { getMerchantRentals, updateRentalStatus } from "@/services/rentalService";
+import { useToast } from "@/hooks/use-toast";
 
 type RentalStatus = "pending" | "approved" | "active" | "completed" | "cancelled";
 
+interface MerchantRental {
+  id: string;
+  product_id: string;
+  user_id: string;
+  rental_period_id: string;
+  size_id: string | null;
+  color_id: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  rental_start_date?: string;
+  rental_end_date?: string;
+  merchant_products: {
+    id: string;
+    name: string;
+    price: number;
+    merchant_id: string;
+  };
+}
+
 const MerchantOrders = () => {
+  const { toast } = useToast();
   const [sortField, setSortField] = useState<"created_at" | "status">("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [filters, setFilters] = useState({
@@ -43,6 +73,9 @@ const MerchantOrders = () => {
     dateTo: ""
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<MerchantRental | null>(null);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState<RentalStatus>("pending");
 
   const { data: merchantData } = useQuery({
     queryKey: ['merchantProfile'],
@@ -51,7 +84,7 @@ const MerchantOrders = () => {
 
   const merchant = merchantData?.data;
 
-  const { data: rentalsData, isLoading } = useQuery({
+  const { data: rentalsData, isLoading, refetch } = useQuery({
     queryKey: ['merchantRentals', merchant?.id],
     queryFn: () => merchant ? getMerchantRentals(merchant.id) : Promise.resolve({ data: [] }),
     enabled: !!merchant,
@@ -130,6 +163,23 @@ const MerchantOrders = () => {
       dateFrom: "",
       dateTo: ""
     });
+  };
+
+  const handleUpdateStatus = async () => {
+    if (!selectedOrder) return;
+    
+    const { success } = await updateRentalStatus(selectedOrder.id, newStatus);
+    
+    if (success) {
+      setIsUpdateDialogOpen(false);
+      refetch();
+    }
+  };
+
+  const openUpdateDialog = (rental: MerchantRental) => {
+    setSelectedOrder(rental);
+    setNewStatus(rental.status as RentalStatus);
+    setIsUpdateDialogOpen(true);
   };
 
   const hasActiveFilters = filters.status || filters.dateFrom || filters.dateTo;
@@ -256,6 +306,7 @@ const MerchantOrders = () => {
                     </div>
                   </TableHead>
                   <TableHead className="text-right">Price</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -273,6 +324,15 @@ const MerchantOrders = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       ${rental.merchant_products?.price?.toFixed(2) || "0.00"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => openUpdateDialog(rental)}
+                      >
+                        Update Status
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -292,6 +352,45 @@ const MerchantOrders = () => {
             </p>
           </div>
         )}
+        
+        <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Update Order Status</DialogTitle>
+              <DialogDescription>
+                Change the status of this order to track its progress.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Order ID: #{selectedOrder?.id.substring(0, 8)}</label>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Product: {selectedOrder?.merchant_products?.name}
+                </p>
+                
+                <label className="text-sm font-medium">Status</label>
+                <Select value={newStatus} onValueChange={(value) => setNewStatus(value as RentalStatus)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsUpdateDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleUpdateStatus}>Update Status</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </MerchantLayout>
   );
