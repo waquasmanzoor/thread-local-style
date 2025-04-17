@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FilterX, Filter, ArrowDownUp } from "lucide-react";
+import { FilterX, Filter, ArrowDownUp, ShoppingCart } from "lucide-react";
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
@@ -28,27 +28,11 @@ import { Input } from "@/components/ui/input";
 import MerchantLayout from "@/components/merchant/MerchantLayout";
 import { 
   getMerchantProfile, 
-  getMerchantRentals
+  getMerchantRentals,
+  MerchantRental
 } from "@/services/merchantService";
 
 type RentalStatus = "pending" | "approved" | "active" | "completed" | "cancelled";
-
-interface RentalWithProduct {
-  id: string;
-  product_id: string;
-  user_id: string;
-  rental_period_id: string;
-  size_id: string | null;
-  color_id: string | null;
-  status: RentalStatus;
-  created_at: string;
-  updated_at: string;
-  merchant_products: {
-    id: string;
-    name: string;
-    price: number;
-  }
-}
 
 const MerchantOrders = () => {
   const [sortField, setSortField] = useState<"created_at" | "status">("created_at");
@@ -73,7 +57,7 @@ const MerchantOrders = () => {
     enabled: !!merchant,
   });
 
-  const rentals = ((rentalsData?.data as RentalWithProduct[]) || []);
+  const rentals = (rentalsData?.data || []) as MerchantRental[];
 
   const toggleSort = (field: "created_at" | "status") => {
     if (sortField === field) {
@@ -114,8 +98,8 @@ const MerchantOrders = () => {
   const sortedRentals = [...filteredRentals].sort((a, b) => {
     if (sortField === 'status') {
       const statusOrder = ["pending", "approved", "active", "completed", "cancelled"];
-      const aIndex = statusOrder.indexOf(a.status);
-      const bIndex = statusOrder.indexOf(b.status);
+      const aIndex = statusOrder.indexOf(a.status as RentalStatus);
+      const bIndex = statusOrder.indexOf(b.status as RentalStatus);
       
       if (sortOrder === 'asc') {
         return aIndex - bIndex;
@@ -150,7 +134,7 @@ const MerchantOrders = () => {
 
   const hasActiveFilters = filters.status || filters.dateFrom || filters.dateTo;
 
-  const statusVariant = (status: RentalStatus) => {
+  const statusVariant = (status: string) => {
     switch (status) {
       case "pending":
         return "bg-yellow-50 text-yellow-600 border-yellow-200";
@@ -312,8 +296,5 @@ const MerchantOrders = () => {
     </MerchantLayout>
   );
 };
-
-// Import at the top of the file
-import { ShoppingCart } from "lucide-react";
 
 export default MerchantOrders;

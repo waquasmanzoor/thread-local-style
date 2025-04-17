@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,41 +22,46 @@ import MerchantSettings from "./pages/merchant/MerchantSettings";
 // Import CSS files for styling
 import './App.css';
 
+// Create a new QueryClient instance
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/product/:id" element={<ProductDetail />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/women" element={<CategoryPage />} />
-              <Route path="/men" element={<CategoryPage />} />
-              <Route path="/designer" element={<CategoryPage />} />
-              <Route path="/new" element={<CategoryPage />} />
-              
-              {/* Merchant Dashboard Routes */}
-              <Route path="/merchant" element={<MerchantDashboard />} />
-              <Route path="/merchant/products" element={<MerchantProducts />} />
-              <Route path="/merchant/orders" element={<MerchantOrders />} />
-              <Route path="/merchant/settings" element={<MerchantSettings />} />
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <AuthProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/product/:id" element={<ProductDetail />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/women" element={<CategoryPage />} />
+                  <Route path="/men" element={<CategoryPage />} />
+                  <Route path="/designer" element={<CategoryPage />} />
+                  <Route path="/new" element={<CategoryPage />} />
+                  
+                  {/* Merchant Dashboard Routes */}
+                  <Route path="/merchant" element={<MerchantDashboard />} />
+                  <Route path="/merchant/products" element={<MerchantProducts />} />
+                  <Route path="/merchant/orders" element={<MerchantOrders />} />
+                  <Route path="/merchant/settings" element={<MerchantSettings />} />
+                  
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
+};
 
 export default App;

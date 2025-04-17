@@ -71,7 +71,11 @@ const MerchantSettings = () => {
   }, [merchant, form]);
 
   const createMutation = useMutation({
-    mutationFn: createMerchantProfile,
+    mutationFn: (values: ProfileFormValues) => createMerchantProfile({
+      store_name: values.store_name,
+      description: values.description || '',
+      logo_url: values.logo_url || null
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['merchantProfile'] });
     },
@@ -79,7 +83,11 @@ const MerchantSettings = () => {
 
   const updateMutation = useMutation({
     mutationFn: (values: ProfileFormValues) => 
-      updateMerchantProfile(merchant!.id, values),
+      updateMerchantProfile(merchant!.id, {
+        store_name: values.store_name,
+        description: values.description || '',
+        logo_url: values.logo_url || null
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['merchantProfile'] });
     },
