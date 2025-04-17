@@ -13,6 +13,10 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Cart from "./pages/Cart";
 import CategoryPage from "./pages/CategoryPage";
+import MerchantDashboard from "./pages/merchant/MerchantDashboard";
+import MerchantProducts from "./pages/merchant/MerchantProducts";
+import MerchantOrders from "./pages/merchant/MerchantOrders";
+import MerchantSettings from "./pages/merchant/MerchantSettings";
 
 // Import CSS files for styling
 import './App.css';
@@ -37,6 +41,13 @@ const App = () => (
               <Route path="/men" element={<CategoryPage />} />
               <Route path="/designer" element={<CategoryPage />} />
               <Route path="/new" element={<CategoryPage />} />
+              
+              {/* Merchant Dashboard Routes */}
+              <Route path="/merchant" element={<MerchantDashboard />} />
+              <Route path="/merchant/products" element={<MerchantProducts />} />
+              <Route path="/merchant/orders" element={<MerchantOrders />} />
+              <Route path="/merchant/settings" element={<MerchantSettings />} />
+              
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
