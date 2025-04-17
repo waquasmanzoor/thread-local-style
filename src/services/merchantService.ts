@@ -201,5 +201,5 @@ export const getMerchantRentals = async (merchantId: string) => {
     throw error;
   }
   
-  return { data: data as MerchantRental[], error };
+  return { data: data as unknown as MerchantRental[], error };
 };

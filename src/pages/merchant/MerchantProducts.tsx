@@ -53,9 +53,9 @@ import MerchantLayout from "@/components/merchant/MerchantLayout";
 import { 
   getMerchantProfile, 
   getMerchantProducts, 
-  createProduct, 
-  updateProduct, 
-  deleteProduct,
+  createMerchantProduct, 
+  updateMerchantProduct, 
+  deleteMerchantProduct,
   MerchantProduct
 } from "@/services/merchantService";
 
@@ -111,7 +111,7 @@ const MerchantProducts = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: (values: FormValues) => createProduct({
+    mutationFn: (values: FormValues) => createMerchantProduct({
       ...values,
       merchant_id: merchant?.id || "",
     }),
@@ -124,7 +124,7 @@ const MerchantProducts = () => {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string, values: FormValues }) => 
-      updateProduct(id, values),
+      updateMerchantProduct(id, values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['merchantProducts'] });
       setIsEditProductOpen(false);
@@ -133,7 +133,7 @@ const MerchantProducts = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteProduct(id),
+    mutationFn: (id: string) => deleteMerchantProduct(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['merchantProducts'] });
       setDeleteConfirmOpen(false);
