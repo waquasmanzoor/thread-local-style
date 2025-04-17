@@ -1,78 +1,80 @@
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { PlusCircle, Trash2, Home, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import { getUserAddresses, deleteAddress, DeliveryAddress } from "@/services/addressService";
-import { AddressForm } from "./AddressForm";
-import { useToast } from "@/components/ui/use-toast";
+import React, { useEffect, useState } from 'react';
+import { Check, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import AddressForm from '@/components/cart/AddressForm';
+import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { DeliveryAddress } from '@/types';
+import { getAllAddresses, deleteAddress } from '@/services/addressService';
 
 interface AddressSelectorProps {
-  onSelectAddress?: (address: DeliveryAddress) => void;
+  selectedAddressId: string | null;
+  onSelectAddress: (addressId: string) => void;
 }
 
-export function AddressSelector({ onSelectAddress }: AddressSelectorProps) {
-  const { toast } = useToast();
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+export default function AddressSelector({ selectedAddressId, onSelectAddress }: AddressSelectorProps) {
+  const { user } = useAuth();
+  const [addresses, setAddresses] = useState<DeliveryAddress[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAddressFormOpen, setIsAddressFormOpen] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
 
-  const { 
-    data: addressesData, 
-    isLoading, 
-    isError,
-    refetch 
-  } = useQuery({
-    queryKey: ["userAddresses"],
-    queryFn: getUserAddresses,
-  });
-
-  const addresses = addressesData?.data || [];
-
-  // Set default selected address when addresses are loaded
-  useState(() => {
-    if (addresses.length > 0 && !selectedAddressId) {
-      const defaultAddress = addresses.find(addr => addr.is_default) || addresses[0];
-      if (defaultAddress) {
-        setSelectedAddressId(defaultAddress.id);
-        if (onSelectAddress) onSelectAddress(defaultAddress);
-      }
+  useEffect(() => {
+    if (user) {
+      fetchAddresses();
+    } else {
+      setAddresses([]);
+      setLoading(false);
     }
-  });
+  }, [user]);
 
-  const handleAddressSelection = (addressId: string) => {
-    setSelectedAddressId(addressId);
-    const selectedAddress = addresses.find(addr => addr.id === addressId);
-    if (selectedAddress && onSelectAddress) {
-      onSelectAddress(selectedAddress);
+  const fetchAddresses = async () => {
+    try {
+      setLoading(true);
+      const addressesData = await getAllAddresses();
+      setAddresses(addressesData);
+      
+      // If we have addresses but none selected, select the default or first one
+      if (addressesData.length > 0 && !selectedAddressId) {
+        const defaultAddress = addressesData.find(addr => addr.is_default);
+        onSelectAddress(defaultAddress?.id || addressesData[0].id);
+      }
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to load addresses',
+        description: 'Please try again later',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleAddressFormSuccess = () => {
+  const handleAddSuccess = () => {
     setIsAddressFormOpen(false);
-    refetch();
+    fetchAddresses();
+    toast({
+      title: 'Address added',
+      description: 'Your new address has been saved',
+    });
+  };
+
+  const handleEditSuccess = () => {
+    setEditingAddressId(null);
+    fetchAddresses();
+    toast({
+      title: 'Address updated',
+      description: 'Your address has been updated successfully',
+    });
   };
 
   const handleDeleteAddress = async () => {
@@ -80,135 +82,200 @@ export function AddressSelector({ onSelectAddress }: AddressSelectorProps) {
     
     try {
       await deleteAddress(addressToDelete);
-      toast({
-        title: "Address deleted",
-        description: "The delivery address has been deleted successfully.",
-      });
-      refetch();
       setAddressToDelete(null);
-    } catch (error) {
+      setIsDeleteDialogOpen(false);
+      
+      // If the deleted address was selected, clear the selection
+      if (selectedAddressId === addressToDelete) {
+        onSelectAddress('');
+      }
+      
+      fetchAddresses();
+      
       toast({
-        title: "Error",
-        description: "Failed to delete address. Please try again.",
-        variant: "destructive",
+        title: 'Address deleted',
+        description: 'Your address has been removed',
+      });
+    } catch (error) {
+      console.error('Error deleting address:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to delete address',
+        description: 'Please try again later',
       });
     }
   };
 
-  if (isError) {
+  if (loading) {
+    return <div className="flex justify-center py-8">Loading addresses...</div>;
+  }
+
+  if (!user) {
     return (
-      <div className="py-4 text-center">
-        <p className="text-destructive">Failed to load addresses.</p>
-        <Button onClick={() => refetch()} variant="outline" className="mt-2">
-          Try Again
-        </Button>
+      <div className="text-center py-4">
+        <p className="mb-2">Please log in to manage delivery addresses</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Delivery Address</h3>
-        <Dialog open={isAddressFormOpen} onOpenChange={setIsAddressFormOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="flex items-center gap-1">
-              <PlusCircle className="h-4 w-4" />
-              <span>Add New</span>
+        <Sheet open={isAddressFormOpen} onOpenChange={setIsAddressFormOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1">
+              <Plus className="h-4 w-4" /> Add New Address
             </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Delivery Address</DialogTitle>
-              <DialogDescription>
-                Fill in the details for your new delivery address.
-              </DialogDescription>
-            </DialogHeader>
-            <AddressForm 
-              onSuccess={handleAddressFormSuccess} 
-              onCancel={() => setIsAddressFormOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+          </SheetTrigger>
+          <SheetContent className="sm:max-w-md">
+            <SheetHeader>
+              <SheetTitle>Add New Address</SheetTitle>
+            </SheetHeader>
+            <div className="mt-6">
+              <AddressForm 
+                onSuccess={handleAddSuccess} 
+                onCancel={() => setIsAddressFormOpen(false)}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
-      {isLoading ? (
-        <div className="space-y-4">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-        </div>
-      ) : addresses.length === 0 ? (
-        <div className="text-center py-8 border border-dashed rounded-lg">
-          <MapPin className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
-          <p className="text-muted-foreground">No saved addresses found.</p>
-          <Button 
-            variant="outline" 
-            className="mt-4"
+      {addresses.length === 0 ? (
+        <div className="text-center py-8 border rounded-lg bg-muted/10">
+          <p className="text-muted-foreground">No saved addresses</p>
+          <Button
+            variant="link"
             onClick={() => setIsAddressFormOpen(true)}
+            className="mt-2"
           >
-            Add Delivery Address
+            Add your first address
           </Button>
         </div>
       ) : (
-        <RadioGroup 
-          value={selectedAddressId || undefined} 
-          onValueChange={handleAddressSelection}
-          className="space-y-3"
+        <RadioGroup
+          value={selectedAddressId || ''}
+          onValueChange={onSelectAddress}
+          className="grid gap-3"
         >
           {addresses.map((address) => (
-            <Card key={address.id} className={`border ${selectedAddressId === address.id ? 'border-primary' : ''}`}>
-              <CardContent className="p-4 flex justify-between items-center">
-                <div className="flex gap-3">
-                  <RadioGroupItem value={address.id} id={`address-${address.id}`} />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{address.street_address}</span>
-                      {address.is_default && (
-                        <span className="flex text-xs items-center gap-1 text-primary">
-                          <Home className="h-3 w-3" /> Default
-                        </span>
-                      )}
+            <Label
+              key={address.id}
+              htmlFor={address.id}
+              className="cursor-pointer"
+            >
+              <Card
+                className={`overflow-hidden ${
+                  selectedAddressId === address.id
+                    ? 'border-primary'
+                    : 'border-border'
+                }`}
+              >
+                <CardContent className="p-4 flex justify-between items-start">
+                  <div className="flex gap-2">
+                    <RadioGroupItem value={address.id} id={address.id} />
+                    <div className="space-y-1">
+                      <div className="font-medium flex items-center gap-2">
+                        {address.street_address}
+                        {address.apartment && `, ${address.apartment}`}
+                        {address.is_default && (
+                          <span className="bg-primary/10 text-primary text-xs font-semibold px-2 py-0.5 rounded">
+                            Default
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {address.city}, {address.state}, {address.country} {address.postal_code}
+                      </div>
                     </div>
-                    {address.apartment && (
-                      <p className="text-sm text-muted-foreground">
-                        {address.apartment}
-                      </p>
-                    )}
-                    <p className="text-sm">
-                      {address.city}, {address.state} {address.postal_code}
-                    </p>
-                    <p className="text-sm">{address.country}</p>
                   </div>
-                </div>
-                <AlertDialog open={addressToDelete === address.id} onOpenChange={(open) => !open && setAddressToDelete(null)}>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-muted-foreground"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setAddressToDelete(address.id);
+                  <div className="flex gap-2">
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setEditingAddressId(address.id);
+                          }}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent className="sm:max-w-md">
+                        <SheetHeader>
+                          <SheetTitle>Edit Address</SheetTitle>
+                        </SheetHeader>
+                        <div className="mt-6">
+                          <AddressForm
+                            onSuccess={handleEditSuccess}
+                            onCancel={() => setEditingAddressId(null)}
+                          />
+                        </div>
+                      </SheetContent>
+                    </Sheet>
+                    <Dialog
+                      open={isDeleteDialogOpen && addressToDelete === address.id}
+                      onOpenChange={(open) => {
+                        setIsDeleteDialogOpen(open);
+                        if (!open) setAddressToDelete(null);
                       }}
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Address</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete this delivery address? This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDeleteAddress}>Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </CardContent>
-            </Card>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setAddressToDelete(address.id);
+                            setIsDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Delete Address</DialogTitle>
+                        </DialogHeader>
+                        <div className="py-4">
+                          <p>Are you sure you want to delete this address?</p>
+                          <p className="text-sm text-muted-foreground mt-2">
+                            {address.street_address}
+                            {address.apartment && `, ${address.apartment}`}
+                            <br />
+                            {address.city}, {address.state}, {address.postal_code}
+                          </p>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setIsDeleteDialogOpen(false);
+                              setAddressToDelete(null);
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={handleDeleteAddress}
+                          >
+                            Delete Address
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </CardContent>
+              </Card>
+            </Label>
           ))}
         </RadioGroup>
       )}

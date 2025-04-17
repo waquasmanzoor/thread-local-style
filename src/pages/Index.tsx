@@ -1,13 +1,14 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Product } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ProductGrid from "@/components/product/ProductGrid";
-import { getAllProducts } from "@/services/productService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search } from "lucide-react";
+import { Product } from "@/types";
+import { getAllProducts } from "@/services/productService";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,7 +21,7 @@ const Index = () => {
 
   useEffect(() => {
     if (data) {
-      setProducts(data);
+      setProducts(data as Product[]);
     }
   }, [data]);
 
