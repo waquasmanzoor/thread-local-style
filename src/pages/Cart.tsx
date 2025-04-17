@@ -9,17 +9,17 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import Container from "@/components/layout/Container";
-import { AddressSelector } from "@/components/cart/AddressSelector";
-import { DeliveryAddress } from "@/services/addressService";
+import AddressSelector from "@/components/cart/AddressSelector";
+import { DeliveryAddress } from "@/types";
 
 const Cart = () => {
   // For now, we'll show an empty cart
   const isEmpty = true;
   const [isAddressOpen, setIsAddressOpen] = useState(true);
-  const [selectedAddress, setSelectedAddress] = useState<DeliveryAddress | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
-  const handleAddressSelection = (address: DeliveryAddress) => {
-    setSelectedAddress(address);
+  const handleAddressSelection = (addressId: string) => {
+    setSelectedAddressId(addressId);
   };
 
   return (
@@ -63,7 +63,10 @@ const Cart = () => {
                     )}
                   </CollapsibleTrigger>
                   <CollapsibleContent className="pt-4">
-                    <AddressSelector onSelectAddress={handleAddressSelection} />
+                    <AddressSelector 
+                      selectedAddressId={selectedAddressId} 
+                      onSelectAddress={handleAddressSelection} 
+                    />
                   </CollapsibleContent>
                 </Collapsible>
                 

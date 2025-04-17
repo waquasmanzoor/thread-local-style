@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface DeliveryAddress {
@@ -44,7 +43,7 @@ export const createAddress = async (address: Omit<DeliveryAddress, "id" | "creat
   return { data, error };
 };
 
-export const getUserAddresses = async () => {
+export const getAllAddresses = async () => {
   const { data: user } = await supabase.auth.getUser();
   
   if (!user.user) {
@@ -61,8 +60,10 @@ export const getUserAddresses = async () => {
     throw error;
   }
   
-  return { data, error };
+  return data || [];
 };
+
+export const getUserAddresses = getAllAddresses;
 
 export const updateAddress = async (id: string, address: Partial<Omit<DeliveryAddress, "id" | "created_at" | "updated_at" | "user_id">>) => {
   const { data, error } = await supabase
@@ -99,7 +100,6 @@ export const setDefaultAddress = async (id: string) => {
     throw new Error('Not authenticated');
   }
   
-  // First, set all addresses for this user to not default
   const { error: resetError } = await supabase
     .from('delivery_addresses')
     .update({ is_default: false })
@@ -109,7 +109,6 @@ export const setDefaultAddress = async (id: string) => {
     throw resetError;
   }
   
-  // Then set the selected address as default
   const { data, error } = await supabase
     .from('delivery_addresses')
     .update({ is_default: true })
