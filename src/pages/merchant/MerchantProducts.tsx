@@ -45,6 +45,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -231,6 +232,8 @@ const MerchantProducts = () => {
     { value: "jewelry", label: "Jewelry" },
     { value: "other", label: "Other" },
   ];
+
+  const { toast } = useToast();
 
   return (
     <MerchantLayout>

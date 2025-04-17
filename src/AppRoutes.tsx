@@ -1,4 +1,4 @@
-import React from "react";
+
 import { Route, Routes } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -13,7 +13,8 @@ import MerchantOrders from "./pages/merchant/MerchantOrders";
 import MerchantSettings from "./pages/merchant/MerchantSettings";
 import BecomeAMerchant from "./pages/BecomeAMerchant";
 
-function App() {
+// This component exports routes that can be imported in main.tsx
+export const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
@@ -30,6 +31,4 @@ function App() {
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
-}
-
-export default App;
+};

@@ -1,9 +1,7 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
+import * as z from "zod";
 import {
   Form,
   FormControl,
@@ -13,32 +11,43 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createAddress } from "@/services/addressService";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
-const addressSchema = z.object({
-  street_address: z.string().min(3, "Street address is required"),
+const formSchema = z.object({
+  street_address: z.string().min(2, {
+    message: "Street address must be at least 2 characters.",
+  }),
   apartment: z.string().optional(),
-  city: z.string().min(2, "City is required"),
-  state: z.string().min(2, "State is required"),
-  postal_code: z.string().min(5, "Postal code is required"),
-  country: z.string().default("United States"),
-  is_default: z.boolean().default(false),
+  city: z.string().min(2, {
+    message: "City must be at least 2 characters.",
+  }),
+  state: z.string().min(2, {
+    message: "State must be at least 2 characters.",
+  }),
+  postal_code: z.string().min(5, {
+    message: "Postal code must be at least 5 characters.",
+  }),
+  country: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof addressSchema>;
-
 interface AddressFormProps {
-  onSuccess?: () => void;
-  onCancel?: () => void;
+  onAddressCreated?: () => void;
 }
 
-export function AddressForm({ onSuccess, onCancel }: AddressFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export function AddressForm({ onAddressCreated }: AddressFormProps) {
+  const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(addressSchema),
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       street_address: "",
       apartment: "",
@@ -46,33 +55,41 @@ export function AddressForm({ onSuccess, onCancel }: AddressFormProps) {
       state: "",
       postal_code: "",
       country: "United States",
-      is_default: false,
     },
   });
 
-  const onSubmit = async (values: FormValues) => {
-    setIsSubmitting(true);
-    try {
-      await createAddress(values);
+  const { mutate: createNewAddress } = useMutation({
+    mutationFn: async (values: z.infer<typeof formSchema>) => {
+      setIsCreating(true);
+      return createAddress(values);
+    },
+    onSuccess: () => {
+      setIsCreating(false);
       toast({
-        title: "Address added",
-        description: "Your delivery address has been added successfully.",
+        title: "Address created successfully!",
+        description: "Your new address has been saved.",
       });
-      if (onSuccess) onSuccess();
-    } catch (error) {
+      queryClient.invalidateQueries({ queryKey: ['addresses'] });
+      form.reset();
+      onAddressCreated?.();
+    },
+    onError: (error: any) => {
+      setIsCreating(false);
       toast({
-        title: "Error",
-        description: "Failed to add address. Please try again.",
         variant: "destructive",
+        title: "Failed to create address",
+        description: error.message || "Something went wrong. Please try again.",
       });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    },
+  });
+
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    createNewAddress(values);
+  }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="street_address"
@@ -86,27 +103,24 @@ export function AddressForm({ onSuccess, onCancel }: AddressFormProps) {
             </FormItem>
           )}
         />
-        
         <FormField
           control={form.control}
           name="apartment"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Apartment/Suite (Optional)</FormLabel>
+              <FormLabel>Apartment, suite, etc. (optional)</FormLabel>
               <FormControl>
-                <Input placeholder="Apt 4B" {...field} />
+                <Input placeholder="Apartment 4B" {...field} />
               </FormControl>
-              <FormMessage />
             </FormItem>
           )}
         />
-
-        <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col md:flex-row gap-4">
           <FormField
             control={form.control}
             name="city"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>City</FormLabel>
                 <FormControl>
                   <Input placeholder="New York" {...field} />
@@ -115,12 +129,11 @@ export function AddressForm({ onSuccess, onCancel }: AddressFormProps) {
               </FormItem>
             )}
           />
-          
           <FormField
             control={form.control}
             name="state"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>State</FormLabel>
                 <FormControl>
                   <Input placeholder="NY" {...field} />
@@ -130,13 +143,12 @@ export function AddressForm({ onSuccess, onCancel }: AddressFormProps) {
             )}
           />
         </div>
-        
-        <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col md:flex-row gap-4">
           <FormField
             control={form.control}
             name="postal_code"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>Postal Code</FormLabel>
                 <FormControl>
                   <Input placeholder="10001" {...field} />
@@ -145,30 +157,31 @@ export function AddressForm({ onSuccess, onCancel }: AddressFormProps) {
               </FormItem>
             )}
           />
-          
           <FormField
             control={form.control}
             name="country"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>Country</FormLabel>
-                <FormControl>
-                  <Input placeholder="United States" {...field} />
-                </FormControl>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="United States" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="United States">United States</SelectItem>
+                    {/* Add more countries here if needed */}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        
-        <div className="flex justify-between pt-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Adding..." : "Add Address"}
-          </Button>
-        </div>
+        <Button type="submit" disabled={isCreating}>
+          {isCreating ? "Creating..." : "Add Address"}
+        </Button>
       </form>
     </Form>
   );
