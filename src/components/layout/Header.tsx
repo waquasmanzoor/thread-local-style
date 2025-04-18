@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Search, ShoppingBag, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b bg-background dark:bg-[#0F172A] dark:border-gray-800">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link to="/" className="text-2xl font-bold">
-          <span className="text-gradient">FASHION</span>RENTAL
+          <span className="text-gradient">RE</span>STYLE
         </Link>
 
         <nav className="flex items-center space-x-4">
