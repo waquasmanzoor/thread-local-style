@@ -1,6 +1,7 @@
+
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { ShoppingBag, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
+import { ShoppingBag, ArrowRight, ChevronDown, ChevronUp, Minus, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -13,11 +14,40 @@ import { createRazorpayOrder, updatePaymentStatus } from "@/services/paymentServ
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
+// Dummy cart items
+const dummyCartItems = [
+  {
+    id: "1",
+    name: "Designer Evening Gown",
+    brand: "Vera Wang",
+    price: 120,
+    image: "https://images.unsplash.com/photo-1566174053879-31528523f8ae",
+    size: "M",
+    color: "Black",
+    rentalPeriod: "4 Days"
+  },
+  {
+    id: "2",
+    name: "Classic Suit",
+    brand: "Hugo Boss",
+    price: 200,
+    image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35",
+    size: "42R",
+    color: "Navy",
+    rentalPeriod: "8 Days"
+  }
+];
+
 const Cart = () => {
   const { user } = useAuth();
   const [isAddressOpen, setIsAddressOpen] = useState(true);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
-  const isEmpty = true; // Replace with actual cart logic
+  const [cartItems] = useState(dummyCartItems);
+  const isEmpty = cartItems.length === 0;
+
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price, 0);
+  const shippingFee = 15;
+  const total = subtotal + shippingFee;
 
   const handleAddressSelection = (addressId: string) => {
     setSelectedAddressId(addressId);
@@ -43,7 +73,7 @@ const Cart = () => {
     }
 
     try {
-      const orderDetails = await createRazorpayOrder(1000, "sample-rental-id");
+      const orderDetails = await createRazorpayOrder(total * 100, "sample-rental-id");
 
       const options = {
         key: orderDetails.razorpay_key,
@@ -80,6 +110,7 @@ const Cart = () => {
         }
       };
 
+      // @ts-ignore - Razorpay type issue
       const razorpayInstance = new window.Razorpay(options);
       razorpayInstance.open();
     } catch (error) {
@@ -116,8 +147,34 @@ const Cart = () => {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              {/* Cart items will go here */}
-              <p>Cart items will be displayed here</p>
+              <div className="space-y-4">
+                {cartItems.map((item) => (
+                  <div 
+                    key={item.id} 
+                    className="flex gap-4 bg-card p-4 rounded-lg border"
+                  >
+                    <img 
+                      src={item.image} 
+                      alt={item.name}
+                      className="w-24 h-24 object-cover rounded-md"
+                    />
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <div>
+                          <h3 className="font-medium">{item.name}</h3>
+                          <p className="text-sm text-muted-foreground">{item.brand}</p>
+                        </div>
+                        <p className="font-medium">${item.price}</p>
+                      </div>
+                      <div className="mt-2 text-sm text-muted-foreground">
+                        <p>Size: {item.size}</p>
+                        <p>Color: {item.color}</p>
+                        <p>Rental Period: {item.rentalPeriod}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
             
             <div className="lg:col-span-1">
@@ -142,15 +199,15 @@ const Cart = () => {
                 <div className="pt-6 border-t">
                   <div className="flex justify-between mb-2">
                     <span>Subtotal</span>
-                    <span>$0.00</span>
+                    <span>${subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between mb-2 text-sm text-muted-foreground">
                     <span>Shipping</span>
-                    <span>$0.00</span>
+                    <span>${shippingFee.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between font-medium text-lg mt-4 pt-4 border-t">
                     <span>Total</span>
-                    <span>$0.00</span>
+                    <span>${total.toFixed(2)}</span>
                   </div>
                   
                   <Button 
