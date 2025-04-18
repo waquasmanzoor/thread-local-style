@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ShoppingBag, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,16 +10,73 @@ import {
 } from "@/components/ui/collapsible";
 import Container from "@/components/layout/Container";
 import AddressSelector from "@/components/cart/AddressSelector";
-import { DeliveryAddress } from "@/types";
+import { createRazorpayOrder } from "@/services/paymentService";
+import Razorpay from "razorpay-checkout";
+import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Cart = () => {
-  // For now, we'll show an empty cart
-  const isEmpty = true;
+  const { user } = useAuth();
   const [isAddressOpen, setIsAddressOpen] = useState(true);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const isEmpty = true; // Replace with actual cart logic
 
   const handleAddressSelection = (addressId: string) => {
     setSelectedAddressId(addressId);
+  };
+
+  const handlePayment = async () => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Login Required",
+        description: "Please log in to proceed with payment"
+      });
+      return;
+    }
+
+    if (!selectedAddressId) {
+      toast({
+        variant: "destructive",
+        title: "Address Required",
+        description: "Please select a delivery address"
+      });
+      return;
+    }
+
+    try {
+      const orderDetails = await createRazorpayOrder(1000, "sample-rental-id");
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: orderDetails.amount,
+        currency: orderDetails.currency,
+        name: "RESTYLE",
+        description: "Clothing Rental Payment",
+        handler: async (response) => {
+          // Handle successful payment
+          toast({
+            title: "Payment Successful",
+            description: "Your rental has been confirmed"
+          });
+        },
+        prefill: {
+          email: user.email || "",
+        },
+        theme: {
+          color: "#3399cc"
+        }
+      };
+
+      const razorpayInstance = new Razorpay(options);
+      razorpayInstance.open();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Payment Error",
+        description: "Unable to process payment"
+      });
+    }
   };
 
   return (
@@ -47,7 +104,7 @@ const Cart = () => {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              {/* Cart items will go here when implemented */}
+              {/* Cart items will go here */}
               <p>Cart items will be displayed here</p>
             </div>
             
@@ -84,7 +141,11 @@ const Cart = () => {
                     <span>$0.00</span>
                   </div>
                   
-                  <Button disabled={!selectedAddressId} className="w-full mt-6">
+                  <Button 
+                    onClick={handlePayment} 
+                    disabled={!selectedAddressId} 
+                    className="w-full mt-6"
+                  >
                     Proceed to Checkout
                   </Button>
                   
