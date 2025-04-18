@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ShoppingBag, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
@@ -10,8 +9,7 @@ import {
 } from "@/components/ui/collapsible";
 import Container from "@/components/layout/Container";
 import AddressSelector from "@/components/cart/AddressSelector";
-import { createRazorpayOrder } from "@/services/paymentService";
-import Razorpay from "razorpay-checkout";
+import { createRazorpayOrder, updatePaymentStatus } from "@/services/paymentService";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -48,17 +46,31 @@ const Cart = () => {
       const orderDetails = await createRazorpayOrder(1000, "sample-rental-id");
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        key: orderDetails.razorpay_key,
         amount: orderDetails.amount,
         currency: orderDetails.currency,
         name: "RESTYLE",
         description: "Clothing Rental Payment",
-        handler: async (response) => {
-          // Handle successful payment
-          toast({
-            title: "Payment Successful",
-            description: "Your rental has been confirmed"
-          });
+        order_id: orderDetails.id,
+        handler: async (response: any) => {
+          try {
+            await updatePaymentStatus(
+              orderDetails.id, 
+              'completed', 
+              response.razorpay_payment_id
+            );
+
+            toast({
+              title: "Payment Successful",
+              description: "Your rental has been confirmed"
+            });
+          } catch (updateError) {
+            toast({
+              variant: "destructive",
+              title: "Payment Update Error",
+              description: "Unable to update payment status"
+            });
+          }
         },
         prefill: {
           email: user.email || "",
@@ -68,7 +80,7 @@ const Cart = () => {
         }
       };
 
-      const razorpayInstance = new Razorpay(options);
+      const razorpayInstance = new window.Razorpay(options);
       razorpayInstance.open();
     } catch (error) {
       toast({

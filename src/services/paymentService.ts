@@ -3,13 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const createRazorpayOrder = async (amount: number, rentalId: string) => {
   try {
-    // In a real-world scenario, this would be an Edge Function calling Razorpay's API securely
     const { data: user } = await supabase.auth.getUser();
     
     if (!user.user) {
       throw new Error("User not authenticated");
     }
 
+    // Create a payment record in Supabase
     const { data, error } = await supabase
       .from('payments')
       .insert({
@@ -24,11 +24,12 @@ export const createRazorpayOrder = async (amount: number, rentalId: string) => {
 
     if (error) throw error;
 
-    // This is a mock implementation. In production, you'd generate an order ID from Razorpay
+    // In a real-world scenario, this would be an Edge Function calling Razorpay's API
     return {
       id: data.id,
       amount: amount,
-      currency: 'INR'
+      currency: 'INR',
+      razorpay_key: import.meta.env.VITE_RAZORPAY_KEY_ID
     };
   } catch (error) {
     console.error("Error creating payment:", error);
