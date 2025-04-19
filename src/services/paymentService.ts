@@ -10,10 +10,21 @@ export const createRazorpayOrder = async (amount: number, rentalInfo: any) => {
       throw new Error("User not authenticated");
     }
     
-    // Generate a valid UUID for rental_id
+    // First, create a rental record in the rentals table
     const rentalId = uuidv4();
+    const { error: rentalError } = await supabase
+      .from('rentals')
+      .insert({
+        id: rentalId,
+        user_id: user.user.id,
+        product_id: rentalInfo.items[0].id, // Using the first item's ID
+        rental_period_id: rentalInfo.items[0].rentalPeriod,
+        status: 'pending'
+      });
+      
+    if (rentalError) throw rentalError;
     
-    // Create a payment record in Supabase
+    // Now create a payment record linked to the rental
     const { data, error } = await supabase
       .from('payments')
       .insert({

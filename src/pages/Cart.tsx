@@ -24,7 +24,7 @@ const dummyCartItems = [
     image: "https://images.unsplash.com/photo-1566174053879-31528523f8ae",
     size: "M",
     color: "Black",
-    rentalPeriod: "4 Days"
+    rentalPeriod: "4_days"
   },
   {
     id: "2",
@@ -34,7 +34,7 @@ const dummyCartItems = [
     image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35",
     size: "42R",
     color: "Navy",
-    rentalPeriod: "8 Days"
+    rentalPeriod: "8_days"
   }
 ];
 
@@ -76,9 +76,12 @@ const Cart = () => {
     setIsLoading(true);
 
     try {
-      // Create dummy rental details
+      // Create more complete rental details for the backend
       const rentalInfo = {
-        items: cartItems,
+        items: cartItems.map(item => ({
+          ...item,
+          rentalPeriod: item.rentalPeriod,
+        })),
         addressId: selectedAddressId,
       };
       
