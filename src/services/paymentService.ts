@@ -1,14 +1,18 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from "uuid";
 
-export const createRazorpayOrder = async (amount: number, rentalId: string) => {
+export const createRazorpayOrder = async (amount: number, rentalInfo: any) => {
   try {
     const { data: user } = await supabase.auth.getUser();
     
     if (!user.user) {
       throw new Error("User not authenticated");
     }
-
+    
+    // Generate a valid UUID for rental_id
+    const rentalId = uuidv4();
+    
     // Create a payment record in Supabase
     const { data, error } = await supabase
       .from('payments')

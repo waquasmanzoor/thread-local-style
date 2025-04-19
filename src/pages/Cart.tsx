@@ -43,6 +43,7 @@ const Cart = () => {
   const [isAddressOpen, setIsAddressOpen] = useState(true);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [cartItems] = useState(dummyCartItems);
+  const [isLoading, setIsLoading] = useState(false);
   const isEmpty = cartItems.length === 0;
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price, 0);
@@ -71,9 +72,17 @@ const Cart = () => {
       });
       return;
     }
+    
+    setIsLoading(true);
 
     try {
-      const orderDetails = await createRazorpayOrder(total * 100, "sample-rental-id");
+      // Create dummy rental details
+      const rentalInfo = {
+        items: cartItems,
+        addressId: selectedAddressId,
+      };
+      
+      const orderDetails = await createRazorpayOrder(total * 100, rentalInfo);
 
       const options = {
         key: orderDetails.razorpay_key,
@@ -114,11 +123,14 @@ const Cart = () => {
       const razorpayInstance = new window.Razorpay(options);
       razorpayInstance.open();
     } catch (error) {
+      console.error("Payment Error:", error);
       toast({
         variant: "destructive",
         title: "Payment Error",
         description: "Unable to process payment"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -212,10 +224,10 @@ const Cart = () => {
                   
                   <Button 
                     onClick={handlePayment} 
-                    disabled={!selectedAddressId} 
+                    disabled={!selectedAddressId || isLoading} 
                     className="w-full mt-6"
                   >
-                    Proceed to Checkout
+                    {isLoading ? "Processing..." : "Proceed to Checkout"}
                   </Button>
                   
                   {!selectedAddressId && (
