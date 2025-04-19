@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ShoppingBag, ArrowRight, ChevronDown, ChevronUp, Minus, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,24 @@ const Cart = () => {
   const subtotal = cartItems.reduce((sum, item) => sum + item.price, 0);
   const shippingFee = 15;
   const total = subtotal + shippingFee;
+
+  // Add useEffect to load Razorpay script dynamically
+  useEffect(() => {
+    const loadRazorpayScript = () => {
+      return new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.onload = () => resolve(true);
+        script.onerror = () => {
+          console.error("Razorpay SDK failed to load");
+          resolve(false);
+        };
+        document.body.appendChild(script);
+      });
+    };
+    
+    loadRazorpayScript();
+  }, []);
 
   const handleAddressSelection = (addressId: string) => {
     setSelectedAddressId(addressId);
@@ -122,9 +140,9 @@ const Cart = () => {
         }
       };
 
-      // @ts-ignore - Razorpay type issue
-      const razorpayInstance = new window.Razorpay(options);
-      razorpayInstance.open();
+      // Use the global Razorpay constructor
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
     } catch (error) {
       console.error("Payment Error:", error);
       toast({

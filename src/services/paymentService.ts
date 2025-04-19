@@ -63,6 +63,20 @@ export const updatePaymentStatus = async (paymentId: string, status: string, raz
       .eq('id', paymentId);
 
     if (error) throw error;
+    
+    // Also update the rental status
+    const { data: paymentData } = await supabase
+      .from('payments')
+      .select('rental_id')
+      .eq('id', paymentId)
+      .single();
+    
+    if (paymentData?.rental_id) {
+      await supabase
+        .from('rentals')
+        .update({ status: status === 'completed' ? 'confirmed' : status })
+        .eq('id', paymentData.rental_id);
+    }
   } catch (error) {
     console.error("Error updating payment status:", error);
     throw error;
